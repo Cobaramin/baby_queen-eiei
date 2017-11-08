@@ -11,10 +11,6 @@ class NQueen(object):
         self.table = [[0] * N for _ in range(N)]
 
     def print_table(self):
-        # for i in range(self.N):
-        #     for j in range(self.N):
-        #         self.table[i][j] = i + j
-        # print(self.table)
         print("-------------")
       
         for row in self.table:
@@ -33,65 +29,49 @@ class NQueen(object):
         same_inc_m = posi1[0]+posi1[1] == posi2[0]+posi2[1]
         return same_colum or same_row or same_dec_m or same_inc_m
 
-    def cost(self, solution):
-        # cost of the solution is the number of non hitting queen
-        # eg. n = 4 & cost = 2 mean non hitting is 2
-        #     n = 4 & cost = 0 mean correct ans
-        # print("start")
-        # print(solution)
-        # print(range(self.N-1))
+    def cost(self, solution): 
+        # cost of the solution is the number of queen that isn't overlap other queen(correct postion)
+        # eg. n = 4 & cost = 2 mean there are 2 queen that are correct position
+        #     n = 4 & cost = 0 mean all queen is overlap
         overlap = [False] * self.N
         for i in range(self.N-1):
             for j in range(i+1, self.N):
-                # print(str(i)+" "+str(j))
-                # print(solution)
-                
                 if self.check_overlap( solution[i], solution[j] ):
                     overlap[i] = True
                     overlap[j] = True
-        # print(overlap)
         return overlap.count(False)#, overlap, solution
 
-    def checkTable_true(self):
+    def checkTable_true(self):  # for check bug
         sum_ = 0
         for t in self.table:
             sum_ += t.count(0) 
-        # print(str(sum_)+" "+str((self.N*self.N)))
         return sum_ == (self.N*self.N - self.N)
 
     def neighbor(self, state):    
-        # random.sample(range(100), 10)
         difX = [0, 0, -1 ,1] # up, down, left, right
         difY = [-1, 1, 0, 0]
-        random_queen_list = sample(range(n),n)
-        # print("+++++++")
-        # print(random_queen_list)
-        # print("+++++++")
+        random_queen_list = sample(range(n),n) # random queen array for next state
         finish = False
 
         for queen in random_queen_list:
-            random_action_list = sample(range(4),4)
-            # print(random_action_list)
-            # print("*******")
-            # print( str(state[queen][0])+" "+str(state[queen][1]) )
-            for action in random_action_list:
+            random_action_list = sample(range(4),4)  # random action array for next state
                 posiX = state[queen][0] + difX[action]
                 posiY = state[queen][1] + difY[action]
-                if (posiX >= 0 and posiX < self.N)and \
-                    (posiY >= 0 and posiY < self.N)and \
-                    (n_queen.table[posiY][posiX] == 0):
-                    # self.table[ state[queen][0] ][ state[queen][1] ] = 0
-                    # self.table[posiX][posiY] = queen + 1
+
+                top_down_check = posiX >= 0 and posiX < self.N
+                left_right_check = posiY >= 0 and posiY < self.N
+                empty_check = n_queen.table[posiY][posiX] == 0
+                if top_down_check and left_right_check and empty_check :  #can move queen to this direction
                     new_state = list(state)
-                    new_state[queen] = (posiX,posiY)
+                    new_state[queen] = (posiX,posiY) 
                     return new_state
  
 
-    def acceptance_probability(old_cost, new_cost, T):
+    def acceptance_probability(self, old_cost, new_cost, T):
         # a = e^(c_new-c_old)/ T
 
-
-        return math.exp(new_cost - old_cost) / T
+    
+        return math.exp(new_cost - old_cost / T  )
 
 
     def anneal(self, solution):
@@ -106,17 +86,10 @@ class NQueen(object):
             # self.print_table()
             while i <= 100:
                 new_solution = self.neighbor(solution)
-
-               
-
-                # if new_solution == None:
-                #     # n_queen.put_queen(solution)
-                #     self.print_table()
-
                 new_cost = self.cost(new_solution)
                 diff_cost = new_cost - old_cost
-                # ap = acceptance_probability(old_cost, new_cost, T)
-                ap = 0.1
+                # ap = self.acceptance_probability( old_cost, new_cost, T)
+                ap = T
 
                 if diff_cost > 0 or ap > random():
                     old_solution = solution
@@ -133,12 +106,6 @@ class NQueen(object):
                         break
 
                     if new_cost == self.N:
-                        # n_queen.put_queen(solution)
-                        # print( "cost :"+str(old_cost) )
-                        # self.print_table()
-                        # print( str(rounds)+" "+str(T) )
-
-                        
                         return solution, old_cost
 
 
@@ -147,12 +114,12 @@ class NQueen(object):
                 T = T * alpha
             rounds += 1
             # print("  Round : {} cost: {}".format(rounds, old_cost), end="\r")
-            print(str(rounds)+" "+str(T))
+            print(str(rounds)+" "+str(ap))
         return solution, old_cost
 
 if __name__ == '__main__':
     s = [
-        
+
         (0, 0),
         (1, 1), 
         (2, 2), 
@@ -164,35 +131,14 @@ if __name__ == '__main__':
 
         ]
 
-    n = 8
+    n = len(s)
     n_queen = NQueen(n)
 
     n_queen.put_queen(s)
     # n_queen.print_table()
     solution, old_cost = n_queen.anneal(s)
 
-    # for x in range(10):
-    #     print("Progress {:2.1%}".format(x / 10), end="\r")
-    # n_queen.print_table()
     print(solution)
     print(old_cost)
     n_queen.put_queen(solution)
     n_queen.print_table()
-    # new_state = s
-
-    # for i in range(1000):        
-    #     cost_value = n_queen.cost(new_state)
-    #     # if cost_value > 0:            
-    #     #     n_queen.print_table()  
-    #     #     print("cost :"+str(cost_value))
-    #     #     print(overlap)
-    #     #     print(solution)      
-        
-    #     new_state = n_queen.neighbor(new_state) 
-    #     if not n_queen.checkTable_true():
-    #         n_queen.print_table()
-    #         print("fail")       
-        
-
-
-    # solution format [(x1,y1),(x2,y2),(x3,y3)]

@@ -55,23 +55,24 @@ class NQueen(object):
 
         for queen in random_queen_list:
             random_action_list = sample(range(4),4)  # random action array for next state
+
+            for action in random_action_list:
+
                 posiX = state[queen][0] + difX[action]
                 posiY = state[queen][1] + difY[action]
 
                 top_down_check = posiX >= 0 and posiX < self.N
                 left_right_check = posiY >= 0 and posiY < self.N
-                empty_check = n_queen.table[posiY][posiX] == 0
-                if top_down_check and left_right_check and empty_check :  #can move queen to this direction
+                # empty_check = n_queen.table[posiY][posiX] == 0
+                if top_down_check and left_right_check and (n_queen.table[posiY][posiX] == 0) :  #can move queen to this direction
                     new_state = list(state)
                     new_state[queen] = (posiX,posiY) 
                     return new_state
  
 
-    def acceptance_probability(self, old_cost, new_cost, T):
-        # a = e^(c_new-c_old)/ T
+    def acceptance_probability(self, diff_cost, T):
 
-    
-        return math.exp(new_cost - old_cost / T  )
+        return math.exp( diff_cost / T  )
 
 
     def anneal(self, solution):
@@ -81,16 +82,17 @@ class NQueen(object):
         T_min = 0.001
         alpha = 0.99
         rounds = 0
-        while rounds <= 10000:
+        while rounds <= 200:
             i = 1
             # self.print_table()
-            while i <= 100:
+            while i <= 5000:
                 new_solution = self.neighbor(solution)
                 new_cost = self.cost(new_solution)
                 diff_cost = new_cost - old_cost
-                # ap = self.acceptance_probability( old_cost, new_cost, T)
-                ap = T
-
+                ap = self.acceptance_probability( diff_cost , T)
+                # ap = T
+                # if diff_cost <= 0:
+                #     print("     ap: "+str(T)+" "+str(ap)+" "+str(diff_cost))
                 if diff_cost > 0 or ap > random():
                     old_solution = solution
                     solution = new_solution
@@ -114,11 +116,11 @@ class NQueen(object):
                 T = T * alpha
             rounds += 1
             # print("  Round : {} cost: {}".format(rounds, old_cost), end="\r")
-            print(str(rounds)+" "+str(ap))
+            print(str(rounds)+" "+str(T)+" "+str(old_cost))
         return solution, old_cost
 
 if __name__ == '__main__':
-    s = [
+    start_state = [
 
         (0, 0),
         (1, 1), 
@@ -131,11 +133,11 @@ if __name__ == '__main__':
 
         ]
 
-    n = len(s)
+    n = 5
+    s = start_state[:n]
     n_queen = NQueen(n)
 
     n_queen.put_queen(s)
-    # n_queen.print_table()
     solution, old_cost = n_queen.anneal(s)
 
     print(solution)
